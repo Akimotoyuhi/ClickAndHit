@@ -9,6 +9,6 @@ public class Cell : MonoBehaviour
 
     public void OnChecked()
     {
-        GameManager.Instance.OnClicked(PosY, PosX);
+        GameManager.Instance.OnClick(PosY, PosX);
     }
 }

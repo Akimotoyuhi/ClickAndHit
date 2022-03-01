@@ -1,17 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] GameObject m_cellPrefab;
-    [SerializeField] Transform m_mapTra;
-    private Cell[,] m_cells;
-    [SerializeField] int m_y = 10;
-    [SerializeField] int m_x = 10;
-    private int m_correctPosY;
-    private int m_correctPosX;
-    private bool m_isPlaying = false;
+    /// <summary>セルのプレハブ</summary>
+    [SerializeField] GameObject _cellPrefab;
+    /// <summary>マップ生成位置</summary>
+    [SerializeField] Transform _mapTra;
+    /// <summary>セル保存用</summary>
+    private Cell[,] _cells;
+    /// <summary>y軸にセルを生成する数</summary>
+    [SerializeField] int _y = 10;
+    /// <summary>x軸にセルを生成する数</summary>
+    [SerializeField] int _x = 10;
+    private int _correctPosY;
+    private int _correctPosX;
+    private bool _isPlaying = false;
+    private PhotonView _view;
     public static GameManager Instance { get; private set; }
 
     private void Awake()
@@ -19,18 +26,33 @@ public class GameManager : MonoBehaviour
         Instance = this;
     }
 
-    void Start()
+    private void Start()
     {
-        m_isPlaying = true;
+        _view = GetComponent<PhotonView>();
+        if (_view.IsMine) Debug.Log("おーなー");
+    }
+
+    /// <summary>
+    /// ゲーム開始
+    /// </summary>
+    public void GameStart()
+    {
+        _isPlaying = true;
         CreateField();
     }
 
-    public void OnClicked(int y, int x)
+    /// <summary>
+    /// セルがクリックされたときに呼ばれる
+    /// </summary>
+    /// <param name="y"></param>
+    /// <param name="x"></param>
+    public void OnClick(int y, int x)
     {
-        if (y == m_correctPosY && x == m_correctPosX)
+        if (!_isPlaying) return;
+        if (y == _correctPosY && x == _correctPosX)
         {
             Debug.Log("ゲーム終了");
-            if (m_isPlaying)
+            if (_isPlaying)
             {
                 Debug.Log("プレイヤー１の勝ち");
             }
@@ -38,7 +60,7 @@ public class GameManager : MonoBehaviour
             {
                 Debug.Log("プレイヤー２の勝ち");
             }
-            m_isPlaying = false;
+            _isPlaying = false;
         }
         else
         {
@@ -49,32 +71,35 @@ public class GameManager : MonoBehaviour
             Debug.Log($"{i}マスくらい離れてるかも");
         }
 
-        if (m_isPlaying)
+        if (_isPlaying)
         {
-            m_isPlaying = false;
+            _isPlaying = false;
         }
         else
         {
-            m_isPlaying = true;
+            _isPlaying = true;
         }
     }
 
+    /// <summary>
+    /// 盤面構築
+    /// </summary>
     private void CreateField()
     {
-        m_cells = new Cell[m_y, m_x];
-        for (int y = 0; y < m_y; y++)
+        _cells = new Cell[_y, _x];
+        for (int y = 0; y < _y; y++)
         {
-            for (int x = 0; x < m_x; x++)
+            for (int x = 0; x < _x; x++)
             {
-                Transform t = Instantiate(m_cellPrefab).transform;
-                t.SetParent(m_mapTra, false);
+                Transform t = Instantiate(_cellPrefab).transform;
+                t.SetParent(_mapTra, false);
                 Cell c = t.gameObject.GetComponent<Cell>();
                 c.PosY = y;
                 c.PosX = x;
-                m_cells[y, x] = c;
+                _cells[y, x] = c;
             }
         }
-        m_correctPosX = Random.Range(0, m_x);
-        m_correctPosY = Random.Range(0, m_y);
+        _correctPosX = Random.Range(0, _x);
+        _correctPosY = Random.Range(0, _y);
     }
 }
