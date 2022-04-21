@@ -2,8 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+using Photon.Realtime;
+using ExitGames.Client.Photon;
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
 {
     /// <summary>セルのプレハブ</summary>
     [SerializeField] GameObject _cellPrefab;
@@ -17,7 +19,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] int _x = 10;
     private int _correctPosY;
     private int _correctPosX;
-    private bool _isPlaying = false;
+    /// <summary>ゲーム中フラグ</summary>
+    private bool _isGame = false;
     private PhotonView _view;
     public static GameManager Instance { get; private set; }
 
@@ -29,7 +32,19 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         _view = GetComponent<PhotonView>();
-        if (_view.IsMine) Debug.Log("おーなー");
+    }
+
+    public void OnClick()
+    {
+        //if (_view.IsMine)
+        //{
+        //    Debug.Log("おーなー");
+        //}
+        //else
+        //{
+        //    Debug.Log("のっとおーなー");
+        //    GameStart();
+        //}
     }
 
     /// <summary>
@@ -37,7 +52,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void GameStart()
     {
-        _isPlaying = true;
+        _isGame = true;
         CreateField();
     }
 
@@ -48,11 +63,11 @@ public class GameManager : MonoBehaviour
     /// <param name="x"></param>
     public void OnClick(int y, int x)
     {
-        if (!_isPlaying) return;
+        if (!_isGame) return;
         if (y == _correctPosY && x == _correctPosX)
         {
             Debug.Log("ゲーム終了");
-            if (_isPlaying)
+            if (_isGame)
             {
                 Debug.Log("プレイヤー１の勝ち");
             }
@@ -60,7 +75,7 @@ public class GameManager : MonoBehaviour
             {
                 Debug.Log("プレイヤー２の勝ち");
             }
-            _isPlaying = false;
+            _isGame = false;
         }
         else
         {
@@ -71,13 +86,13 @@ public class GameManager : MonoBehaviour
             Debug.Log($"{i}マスくらい離れてるかも");
         }
 
-        if (_isPlaying)
+        if (_isGame)
         {
-            _isPlaying = false;
+            _isGame = false;
         }
         else
         {
-            _isPlaying = true;
+            _isGame = true;
         }
     }
 
@@ -102,4 +117,22 @@ public class GameManager : MonoBehaviour
         _correctPosX = Random.Range(0, _x);
         _correctPosY = Random.Range(0, _y);
     }
+
+    public void OnEvent(EventData photonEvent)
+    {
+        switch (photonEvent.Code)
+        {
+            case (byte)GameState.Start:
+                GameStart();
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+public enum GameState : byte
+{
+    Start,
+    End,
 }

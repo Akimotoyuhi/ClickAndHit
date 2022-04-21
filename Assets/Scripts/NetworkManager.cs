@@ -15,6 +15,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks // Photon Realtime —p‚Ìƒ
     [SerializeField] int _maxPlayerCount = 2;
     /// <summary>ƒQ[ƒ€ŠJn‚ÉÀs‚³‚ê‚éˆ—</summary>
     [SerializeField] UnityEvent _onGameStart = default;
+    private int _playerCount = 0;
+    private PhotonView _view;
 
     void Awake()
     {
@@ -26,6 +28,26 @@ public class NetworkManager : MonoBehaviourPunCallbacks // Photon Realtime —p‚Ìƒ
     {
         // Photon ‚ÉÚ‘±‚·‚é
         Connect("1.0"); // 1.0 ‚Íƒo[ƒWƒ‡ƒ“”Ô†i“¯‚¶ƒo[ƒWƒ‡ƒ“‚ğw’è‚µ‚½ƒNƒ‰ƒCƒAƒ“ƒg“¯m‚ªÚ‘±‚Å‚«‚éj
+        _view = GetComponent<PhotonView>();
+    }
+
+    [PunRPC]
+    private void CheckCount()
+    {
+        _playerCount++;
+        if (_maxPlayerCount == _playerCount && PhotonNetwork.IsMasterClient)
+        {
+            PhotonNetwork.CurrentRoom.IsOpen = false;
+            RaiseEventOptions eventOptions = new RaiseEventOptions();
+            eventOptions.Receivers = ReceiverGroup.All;
+            SendOptions sendOptions = new SendOptions();
+            PhotonNetwork.RaiseEvent((byte)GameState.Start, null, eventOptions, sendOptions);
+        }
+    }
+
+    public void OnClick()
+    {
+        _view.RPC(nameof(CheckCount), RpcTarget.All);
     }
 
     /// <summary>
@@ -152,7 +174,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks // Photon Realtime —p‚Ìƒ
     public override void OnJoinedRoom()
     {
         Debug.Log("OnJoinedRoom");
-        StartGame();
+        
     }
 
     /// <summary>w’è‚µ‚½•”‰®‚Ö‚Ì“üº‚É¸”s‚µ‚½</summary>
@@ -177,7 +199,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks // Photon Realtime —p‚Ìƒ
     /// <summary>©•ª‚Ì‚¢‚é•”‰®‚É‘¼‚ÌƒvƒŒƒCƒ„[‚ª“üº‚µ‚Ä‚«‚½</summary>
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        Debug.Log("OnPlayerEnteredRoom: " + newPlayer.NickName);
+        Debug.Log("OnPlayerEnteredRoom: " + newPlayer.ActorNumber);
     }
 
     /// <summary>©•ª‚Ì‚¢‚é•”‰®‚©‚ç‘¼‚ÌƒvƒŒƒCƒ„[‚ª‘Şº‚µ‚½</summary>
