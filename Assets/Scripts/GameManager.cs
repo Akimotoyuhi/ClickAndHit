@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
@@ -17,8 +18,20 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     [SerializeField] int _y = 10;
     /// <summary>x軸にセルを生成する数</summary>
     [SerializeField] int _x = 10;
+    [SerializeField] Text _text;
+    /// <summary>マッチングボタン</summary>
+    [SerializeField] GameObject _matchButton;
+    /// <summary>背景</summary>
+    [SerializeField] Image _background;
+    /// <summary>オーナーの背景色</summary>
+    [SerializeField] Color _backgroundOwnerColor = Color.white;
+    /// <summary>オーナーじゃない時の背景色</summary>
+    [SerializeField] Color _backgroundUnOwnerColor = Color.white;
+    /// <summary>正解ポジション</summary>
     private int _correctPosY;
     private int _correctPosX;
+    /// <summary>経過ターン</summary>
+    private int _turn;
     /// <summary>ゲーム中フラグ</summary>
     private bool _isGame = false;
     private PhotonView _view;
@@ -53,7 +66,15 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     public void GameStart()
     {
         _isGame = true;
-        CreateField();
+        if (_view.IsMine)
+        {
+            int x = Random.Range(0, _x);
+            int y = Random.Range(0, _y);
+            Debug.Log($"Call RPC {x}, {y}");
+            _view.RPC(nameof(CreateField), RpcTarget.All, new object[] { x, y });
+        }
+        _matchButton.SetActive(false);
+        
     }
 
     /// <summary>
@@ -64,6 +85,16 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     public void OnClick(int y, int x)
     {
         if (!_isGame) return;
+        if (_turn % 2 == 0)
+        {
+            if (!_view.IsMine)
+                return;
+        }
+        else
+        {
+            if (_view.IsMine)
+                return;
+        }
         if (y == _correctPosY && x == _correctPosX)
         {
             Debug.Log("ゲーム終了");
@@ -86,20 +117,23 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
             Debug.Log($"{i}マスくらい離れてるかも");
         }
 
-        if (_isGame)
-        {
-            _isGame = false;
-        }
-        else
-        {
-            _isGame = true;
-        }
+        _turn++;
+
+        //if (_isGame)
+        //{
+        //    _isGame = false;
+        //}
+        //else
+        //{
+        //    _isGame = true;
+        //}
     }
 
     /// <summary>
     /// 盤面構築
     /// </summary>
-    private void CreateField()
+    [PunRPC]
+    private void CreateField(int correctNumX, int correctNumY)
     {
         _cells = new Cell[_y, _x];
         for (int y = 0; y < _y; y++)
@@ -114,8 +148,10 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
                 _cells[y, x] = c;
             }
         }
-        _correctPosX = Random.Range(0, _x);
-        _correctPosY = Random.Range(0, _y);
+        _correctPosX = correctNumX;
+        _correctPosY = correctNumY;
+        Debug.Log($"{_correctPosX}, {_correctPosY}");
+        SetPanel();
     }
 
     public void OnEvent(EventData photonEvent)
@@ -127,6 +163,20 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
                 break;
             default:
                 break;
+        }
+    }
+
+    private void SetPanel()
+    {
+        if (_view.IsMine)
+        {
+            _background.color = _backgroundOwnerColor;
+            _text.text = "プレイヤー１" + _correctPosX + _correctPosY;
+        }
+        else
+        {
+            _background.color = _backgroundUnOwnerColor;
+            _text.text = "プレイヤー２" + _correctPosX + _correctPosY;
         }
     }
 }

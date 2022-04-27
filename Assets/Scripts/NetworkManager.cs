@@ -37,6 +37,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks // Photon Realtime —p‚Ìƒ
         _playerCount++;
         if (_maxPlayerCount == _playerCount && PhotonNetwork.IsMasterClient)
         {
+            //İ’èl”‚É’B‚µ‚½‚ç•”‰®‚ğ•Â‚¶‚é
             PhotonNetwork.CurrentRoom.IsOpen = false;
             RaiseEventOptions eventOptions = new RaiseEventOptions();
             eventOptions.Receivers = ReceiverGroup.All;
