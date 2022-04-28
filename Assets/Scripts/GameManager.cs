@@ -31,11 +31,26 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     private int _correctPosY;
     private int _correctPosX;
     /// <summary>経過ターン</summary>
-    private int _turn;
+    private int _currentTurn;
     /// <summary>ゲーム中フラグ</summary>
     private bool _isGame = false;
     private PhotonView _view;
     public static GameManager Instance { get; private set; }
+    /// <summary>現在どちらのターンか</summary>
+    public bool IsMineTurn
+    {
+        get
+        {
+            if (_view.IsMine && _currentTurn % 2 == 0 || !_view.IsMine && _currentTurn % 2 != 0)
+            {
+                Debug.Log("true");
+                return true;
+            }
+            else
+                Debug.Log("false");
+            return false;
+        }
+    }
 
     private void Awake()
     {
@@ -45,19 +60,6 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     private void Start()
     {
         _view = GetComponent<PhotonView>();
-    }
-
-    public void OnClick()
-    {
-        //if (_view.IsMine)
-        //{
-        //    Debug.Log("おーなー");
-        //}
-        //else
-        //{
-        //    Debug.Log("のっとおーなー");
-        //    GameStart();
-        //}
     }
 
     /// <summary>
@@ -70,11 +72,17 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         {
             int x = Random.Range(0, _x);
             int y = Random.Range(0, _y);
-            Debug.Log($"Call RPC {x}, {y}");
             _view.RPC(nameof(CreateField), RpcTarget.All, new object[] { x, y });
         }
         _matchButton.SetActive(false);
         
+    }
+
+    public void OnClick(int x, int y, System.Func<bool> onClick)
+    {
+        Debug.Log($"IsGame {_isGame}");
+        if (_isGame && onClick())
+            _view.RPC(nameof(OnClick), RpcTarget.All, new object[] { x, y });
     }
 
     /// <summary>
@@ -82,19 +90,20 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     /// </summary>
     /// <param name="y"></param>
     /// <param name="x"></param>
-    public void OnClick(int y, int x)
+    [PunRPC]
+    private void OnClick(int x, int y)
     {
-        if (!_isGame) return;
-        if (_turn % 2 == 0)
-        {
-            if (!_view.IsMine)
-                return;
-        }
-        else
-        {
-            if (_view.IsMine)
-                return;
-        }
+        //if (!_isGame) return;
+        //if (_currentTurn % 2 == 0)
+        //{
+        //    if (!_view.IsMine)
+        //        return;
+        //}
+        //else
+        //{
+        //    if (_view.IsMine)
+        //        return;
+        //}
         if (y == _correctPosY && x == _correctPosX)
         {
             Debug.Log("ゲーム終了");
@@ -117,7 +126,7 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
             Debug.Log($"{i}マスくらい離れてるかも");
         }
 
-        _turn++;
+        _currentTurn++;
 
         //if (_isGame)
         //{
@@ -150,7 +159,6 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         }
         _correctPosX = correctNumX;
         _correctPosY = correctNumY;
-        Debug.Log($"{_correctPosX}, {_correctPosY}");
         SetPanel();
     }
 
