@@ -42,12 +42,7 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         get
         {
             if (_view.IsMine && _currentTurn % 2 == 0 || !_view.IsMine && _currentTurn % 2 != 0)
-            {
-                Debug.Log("true");
                 return true;
-            }
-            else
-                Debug.Log("false");
             return false;
         }
     }
@@ -75,12 +70,11 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
             _view.RPC(nameof(CreateField), RpcTarget.All, new object[] { x, y });
         }
         _matchButton.SetActive(false);
-        
+
     }
 
     public void OnClick(int x, int y, System.Func<bool> onClick)
     {
-        Debug.Log($"IsGame {_isGame}");
         if (_isGame && onClick())
             _view.RPC(nameof(OnClick), RpcTarget.All, new object[] { x, y });
     }
@@ -154,6 +148,12 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
                 Cell c = t.gameObject.GetComponent<Cell>();
                 c.PosY = y;
                 c.PosX = x;
+                int yy = y;
+                int xx = x;
+                if (yy < 0) yy *= -1;
+                if (xx < 0) xx *= -1;
+                int i = yy + xx;
+                c.CorrectDistLevel = i;
                 _cells[y, x] = c;
             }
         }

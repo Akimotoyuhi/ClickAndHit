@@ -23,32 +23,25 @@ public class Cell : MonoBehaviour, IPointerUpHandler
     {
         set
         {
-            _correctDistLevel = value;
-            if (_correctDistLevel < 0)
-                _correctDistLevel = 0;
-            else if (_correctDistLevel > 5)
-                _correctDistLevel = 5;
+            int i = value;
+            if (i == 0)
+                i = 0;
+            else if (i >= 2)
+                i = 1;
+            else if (i >= 5)
+                i = 2;
+            else if (i >= 8)
+                i = 3;
+            else
+                i = 4;
+            _correctDistLevel = i;
         }
     }
-
-    /// <summary>
-    /// クリックされた時の処理<br/>
-    /// Unityのボタンから呼ばれる事を想定している
-    /// </summary>
-    //public void OnClick()
-    //{
-    //    if (_isClick)
-    //        return;
-    //    _isClick = true;
-    //    GameManager.Instance.OnClick(PosY, PosX);
-    //    ColorChange();
-    //}
 
     public void OnPointerUp(PointerEventData eventData)
     {
         GameManager.Instance.OnClick(PosX, PosY, () =>
         {
-            Debug.Log($"isClick {_isClick}");
             if (_isClick || !GameManager.Instance.IsMineTurn)
                 return false;
             _isClick = true;
