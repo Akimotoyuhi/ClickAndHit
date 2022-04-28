@@ -76,28 +76,18 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     public void OnClick(int x, int y, System.Func<bool> onClick)
     {
         if (_isGame && onClick())
-            _view.RPC(nameof(OnClick), RpcTarget.All, new object[] { x, y });
+        {
+            _view.RPC(nameof(Evaluation), RpcTarget.All, new object[] { x, y });
+            _view.RPC(nameof(CellClicked), RpcTarget.Others, new object[] { x, y });
+        }
     }
 
     /// <summary>
-    /// セルがクリックされたときに呼ばれる
+    /// 勝敗判定
     /// </summary>
-    /// <param name="y"></param>
-    /// <param name="x"></param>
     [PunRPC]
-    private void OnClick(int x, int y)
+    private void Evaluation(int x, int y)
     {
-        //if (!_isGame) return;
-        //if (_currentTurn % 2 == 0)
-        //{
-        //    if (!_view.IsMine)
-        //        return;
-        //}
-        //else
-        //{
-        //    if (_view.IsMine)
-        //        return;
-        //}
         if (y == _correctPosY && x == _correctPosX)
         {
             Debug.Log("ゲーム終了");
@@ -111,25 +101,8 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
             }
             _isGame = false;
         }
-        else
-        {
-            if (y < 0) y *= -1;
-            if (x < 0) x *= -1;
-            int i = y + x;
-            Debug.Log($"ハズレ～～～～wwwwwwww");
-            Debug.Log($"{i}マスくらい離れてるかも");
-        }
 
         _currentTurn++;
-
-        //if (_isGame)
-        //{
-        //    _isGame = false;
-        //}
-        //else
-        //{
-        //    _isGame = true;
-        //}
     }
 
     /// <summary>
@@ -138,7 +111,7 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     [PunRPC]
     private void CreateField(int correctNumX, int correctNumY)
     {
-        _cells = new Cell[_y, _x];
+        _cells = new Cell[_x, _y];
         for (int y = 0; y < _y; y++)
         {
             for (int x = 0; x < _x; x++)
@@ -148,18 +121,30 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
                 Cell c = t.gameObject.GetComponent<Cell>();
                 c.PosY = y;
                 c.PosX = x;
-                int yy = y;
-                int xx = x;
+                c.gameObject.name = $"Cell,{x} {y}";
+                int yy = correctNumY - y;
+                int xx = correctNumX - x;
                 if (yy < 0) yy *= -1;
                 if (xx < 0) xx *= -1;
                 int i = yy + xx;
                 c.CorrectDistLevel = i;
-                _cells[y, x] = c;
+                _cells[x, y] = c;
             }
         }
         _correctPosX = correctNumX;
         _correctPosY = correctNumY;
         SetPanel();
+    }
+
+    /// <summary>
+    /// セルが押された事を同期するための関数
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    [PunRPC]
+    private void CellClicked(int x, int y)
+    {
+        _cells[x, y].IsClick = true;
     }
 
     public void OnEvent(EventData photonEvent)
@@ -179,12 +164,12 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         if (_view.IsMine)
         {
             _background.color = _backgroundOwnerColor;
-            _text.text = "プレイヤー１" + _correctPosX + _correctPosY;
+            _text.text = "プレイヤー１";
         }
         else
         {
             _background.color = _backgroundUnOwnerColor;
-            _text.text = "プレイヤー２" + _correctPosX + _correctPosY;
+            _text.text = "プレイヤー２";
         }
     }
 }

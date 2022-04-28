@@ -12,12 +12,22 @@ public class Cell : MonoBehaviour, IPointerUpHandler
         "正解のマスとの差分が2マス以内\n" +
         "5マス以内\n" +
         "8マス以内\n" +
+        "10マス以内\n" +
         "それより遠い")]
     [SerializeField] Color[] _colors;
     private bool _isClick;
     private int _correctDistLevel = 0;
     public int PosY { get; set; }
     public int PosX { get; set; }
+    /// <summary>クリック済みフラグ</summary>
+    public bool IsClick
+    {
+        set
+        {
+            _isClick = value;
+            ColorChange();
+        }
+    }
     /// <summary>正解のマスからどれくらい離れているかを曖昧にした値</summary>
     public int CorrectDistLevel
     {
@@ -26,14 +36,16 @@ public class Cell : MonoBehaviour, IPointerUpHandler
             int i = value;
             if (i == 0)
                 i = 0;
-            else if (i >= 2)
+            else if (i <= 2)
                 i = 1;
-            else if (i >= 5)
+            else if (i <= 5)
                 i = 2;
-            else if (i >= 8)
+            else if (i <= 8)
                 i = 3;
-            else
+            else if (i <= 10)
                 i = 4;
+            else
+                i = 5;
             _correctDistLevel = i;
         }
     }
@@ -44,14 +56,13 @@ public class Cell : MonoBehaviour, IPointerUpHandler
         {
             if (_isClick || !GameManager.Instance.IsMineTurn)
                 return false;
-            _isClick = true;
-            ColorChange();
+            IsClick = true;
             return true;
         });
     }
 
     /// <summary>
-    /// 色変え
+    /// セルの色を変える
     /// </summary>
     private void ColorChange()
     {
