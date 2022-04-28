@@ -974,6 +974,7 @@ MonoBehaviour:
   _background: {fileID: 1366700518}
   _backgroundOwnerColor: {r: 0.9056604, g: 0.16575289, b: 0.16575289, a: 1}
   _backgroundUnOwnerColor: {r: 0.2170167, g: 0.3468419, b: 0.9056604, a: 1}
+  _gameEndPanel: {fileID: 499312838}
 --- !u!4 &1592564422
 Transform:
   m_ObjectHideFlags: 0

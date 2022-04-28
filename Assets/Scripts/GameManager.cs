@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     [SerializeField] Color _backgroundOwnerColor = Color.white;
     /// <summary>オーナーじゃない時の背景色</summary>
     [SerializeField] Color _backgroundUnOwnerColor = Color.white;
+    [SerializeField] GameObject _gameEndPanel;
     /// <summary>正解ポジション</summary>
     private int _correctPosY;
     private int _correctPosX;
@@ -55,6 +56,7 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     private void Start()
     {
         _view = GetComponent<PhotonView>();
+        _gameEndPanel.SetActive(false);
     }
 
     /// <summary>
@@ -91,6 +93,7 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         if (y == _correctPosY && x == _correctPosX)
         {
             Debug.Log("ゲーム終了");
+            _gameEndPanel.SetActive(true);
             if (_isGame)
             {
                 Debug.Log("プレイヤー１の勝ち");
