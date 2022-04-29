@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
@@ -27,8 +28,13 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     [SerializeField] Color _backgroundOwnerColor = Color.white;
     /// <summary>オーナーじゃない時の背景色</summary>
     [SerializeField] Color _backgroundUnOwnerColor = Color.white;
+    /// <summary>ゲーム終了時に表示するパネル</summary>
     [SerializeField] GameObject _gameEndPanel;
-    /// <summary>正解ポジション</summary>
+    /// <summary>ゲーム終了時に表示するテキスト</summary>
+    [SerializeField] Text _gameEndText;
+    /// <summary>勝ち負けを表示するテキストを表示するまでの時間</summary>
+    [SerializeField] float _gameEndTextViewDuration;
+    /// <summary>正解位置</summary>
     private int _correctPosY;
     private int _correctPosX;
     /// <summary>経過ターン</summary>
@@ -92,20 +98,28 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     {
         if (y == _correctPosY && x == _correctPosX)
         {
-            Debug.Log("ゲーム終了");
             _gameEndPanel.SetActive(true);
-            if (_isGame)
+            _gameEndText.text = "終了！！！！";
+            
+            DOVirtual.DelayedCall(_gameEndTextViewDuration, () =>
             {
-                Debug.Log("プレイヤー１の勝ち");
-            }
-            else
-            {
-                Debug.Log("プレイヤー２の勝ち");
-            }
+                if (IsMineTurn)
+                {
+                    _gameEndText.text = "勝利！！！";
+                }
+                else
+                {
+                    _gameEndText.text = "敗北...";
+                }
+            });
+
             _isGame = false;
         }
-
-        _currentTurn++;
+        else
+        {
+            _currentTurn++;
+            SetPanel();
+        }
     }
 
     /// <summary>
@@ -140,10 +154,31 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     }
 
     /// <summary>
-    /// セルが押された事を同期するための関数
+    /// 画面の情報を更新する
     /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
+    private void SetPanel()
+    {
+        if (IsMineTurn)
+        {
+            _text.text = "君のターン";
+        }
+        else
+        {
+            _text.text = "相手のターン";
+        }
+        if (_view.IsMine)
+        {
+            _background.color = _backgroundOwnerColor;
+        }
+        else
+        {
+            _background.color = _backgroundUnOwnerColor;
+        }
+    }
+
+    /// <summary>
+    /// セルが押された事を同期する
+    /// </summary>
     [PunRPC]
     private void CellClicked(int x, int y)
     {
@@ -159,20 +194,6 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
                 break;
             default:
                 break;
-        }
-    }
-
-    private void SetPanel()
-    {
-        if (_view.IsMine)
-        {
-            _background.color = _backgroundOwnerColor;
-            _text.text = "プレイヤー１";
-        }
-        else
-        {
-            _background.color = _backgroundUnOwnerColor;
-            _text.text = "プレイヤー２";
         }
     }
 }
