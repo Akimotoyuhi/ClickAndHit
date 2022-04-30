@@ -158,15 +158,20 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     /// </summary>
     private void SetText()
     {
+        _text.text = "";
+        _text.color = Color.white;
+        _background.color = Color.white;
+        Sequence s = DOTween.Sequence();
+        s.Append(_text.DOColor(Color.black, 0.5f));
         if (IsMineTurn)
         {
             _text.text = "君のターン";
-            SetPanelColor(_view.IsMine);
+            s.Join(SetPanelColor(_view.IsMine));
         }
         else
         {
             _text.text = "相手のターン";
-            SetPanelColor(!_view.IsMine);
+            s.Join(SetPanelColor(!_view.IsMine));
         }
         
     }
@@ -174,12 +179,12 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     /// <summary>
     /// 画面の色変え
     /// </summary>
-    private void SetPanelColor(bool isMine)
+    private Tween SetPanelColor(bool isMine)
     {
         if (isMine)
-            _background.color = _backgroundOwnerColor;
+            return _background.DOColor(_backgroundOwnerColor, 0.1f);
         else
-            _background.color = _backgroundUnOwnerColor;
+            return _background.DOColor(_backgroundUnOwnerColor, 0.1f);
     }
 
     /// <summary>
