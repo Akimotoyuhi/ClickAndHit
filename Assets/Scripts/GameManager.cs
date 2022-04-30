@@ -118,7 +118,7 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         else
         {
             _currentTurn++;
-            SetPanel();
+            SetText();
         }
     }
 
@@ -150,30 +150,36 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         }
         _correctPosX = correctNumX;
         _correctPosY = correctNumY;
-        SetPanel();
+        SetText();
     }
 
     /// <summary>
-    /// 画面の情報を更新する
+    /// 画面のテキスト更新
     /// </summary>
-    private void SetPanel()
+    private void SetText()
     {
         if (IsMineTurn)
         {
             _text.text = "君のターン";
+            SetPanelColor(_view.IsMine);
         }
         else
         {
             _text.text = "相手のターン";
+            SetPanelColor(!_view.IsMine);
         }
-        if (_view.IsMine)
-        {
+        
+    }
+
+    /// <summary>
+    /// 画面の色変え
+    /// </summary>
+    private void SetPanelColor(bool isMine)
+    {
+        if (isMine)
             _background.color = _backgroundOwnerColor;
-        }
         else
-        {
             _background.color = _backgroundUnOwnerColor;
-        }
     }
 
     /// <summary>
