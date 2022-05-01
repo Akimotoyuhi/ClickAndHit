@@ -34,6 +34,7 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     [SerializeField] Text _gameEndText;
     /// <summary>勝ち負けを表示するテキストを表示するまでの時間</summary>
     [SerializeField] float _gameEndTextViewDuration;
+    [SerializeField] GameObject _retryButton;
     /// <summary>正解位置</summary>
     private int _correctPosY;
     private int _correctPosX;
@@ -62,7 +63,16 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     private void Start()
     {
         _view = GetComponent<PhotonView>();
+        Setup();
+    }
+
+    private void Setup()
+    {
         _gameEndPanel.SetActive(false);
+        _retryButton.SetActive(false);
+        for (int i = _mapTra.childCount - 1; i >= 0; i--)
+            Destroy(_mapTra.GetChild(i).gameObject);
+        _currentTurn = 0;
     }
 
     /// <summary>
@@ -70,17 +80,22 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     /// </summary>
     public void GameStart()
     {
+        Setup();
         _isGame = true;
         if (_view.IsMine)
         {
-            int x = Random.Range(0, _x);
-            int y = Random.Range(0, _y);
-            _view.RPC(nameof(CreateField), RpcTarget.All, new object[] { x, y });
+            _view.RPC(nameof(CreateField), RpcTarget.All, new object[] { Random.Range(0, _x), Random.Range(0, _y) });
         }
         _matchButton.SetActive(false);
 
     }
 
+    /// <summary>
+    /// クリックされたセルの情報を渡してもらう関数
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="onClick"></param>
     public void OnClick(int x, int y, System.Func<bool> onClick)
     {
         if (_isGame && onClick())
@@ -104,13 +119,10 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
             DOVirtual.DelayedCall(_gameEndTextViewDuration, () =>
             {
                 if (IsMineTurn)
-                {
                     _gameEndText.text = "勝利！！！";
-                }
                 else
-                {
                     _gameEndText.text = "敗北...";
-                }
+                _retryButton.SetActive(true);
             });
 
             _isGame = false;
@@ -194,6 +206,18 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     private void CellClicked(int x, int y)
     {
         _cells[x, y].IsClick = true;
+    }
+
+    /// <summary>
+    /// リトライボタンが押された時
+    /// <br/>Unityのボタンから呼ばれる事を想定している
+    /// </summary>
+    public void OnRetryButton()
+    {
+        RaiseEventOptions eventOptions = new RaiseEventOptions();
+        eventOptions.Receivers = ReceiverGroup.All;
+        SendOptions sendOptions = new SendOptions();
+        PhotonNetwork.RaiseEvent((byte)GameState.Start, null, eventOptions, sendOptions);
     }
 
     public void OnEvent(EventData photonEvent)
